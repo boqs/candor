@@ -148,8 +148,6 @@ int signal_playback_trigger[48] = {0};
 char *monome_name;
 char *monome_name_user_defined="init";
 char *monome_device_type;
-int monome_serialosc_port = 0;
-int candor_osc_port = 0;
 
 /* serialosc host, default =  127.0.0.1, port: 12002 */
 int osc_interface_disable = 0;
@@ -602,6 +600,8 @@ togglebank_page_chooser(int button)
 void
 handle_press(unsigned int x, unsigned int y)
 {
+  printf("key press\n");
+
   unsigned int x2, y2, button, c;
 
   /* store monome state change */
@@ -969,7 +969,7 @@ handle_press(unsigned int x, unsigned int y)
 void
 handle_lift(unsigned int x, unsigned int y)
 {
-
+  printf("key lift\n");
   unsigned int x2;
 
   x2 = x - 8;
@@ -985,6 +985,7 @@ int monome_key_handler(const char *path, const char *types, lo_arg ** argv,
   (void) types;
   (void) data;
   (void) user_data;
+  printf("entered monome_key_handler\n");
   if(argc >= 3) {
     if(argv[2]->i) {
       handle_press(argv[0]->i, argv[1]->i);
@@ -1951,6 +1952,7 @@ void
 setup_candor( char *name, char *path, char *prefix,
 	     int bitdepth, char *rawmidi_device)
 {
+  printf("creating state_manager thread\n");
   /* begin 'state manager' thread */
   pthread_t state_thread_id;
   pthread_create(&state_thread_id, NULL, state_manager, NULL);
@@ -1966,6 +1968,7 @@ setup_candor( char *name, char *path, char *prefix,
      return;
    }
 
+  printf(stderr, "creating metronome thread\n");
   /* begin sequencer metronome thread */
   pthread_t transport_thread_id;
   pthread_create(&transport_thread_id, NULL, seq_transport_thread, NULL);
@@ -1976,8 +1979,8 @@ setup_candor( char *name, char *path, char *prefix,
       pthread_t rawmidi_thread_id;
       pthread_create(&rawmidi_thread_id, NULL, process_alsa_rawmidi, rawmidi_device);
       pthread_detach(&rawmidi_thread_id);
-    }
-} /* setup_candor */
+    }}
+    /* setup_candor */
 
 void
 show_usage()
@@ -2052,10 +2055,12 @@ int osc_external_clock_handler(const char *path, const char *types, lo_arg ** ar
 int osc_serialosc_port_handler(const char *path, const char *types, lo_arg ** argv,
 				 int argc, void *data, void *user_data)
 {
-  printf("received focus notification\n");
+  printf("entered port_handler\n");
   if(argc >= 1)
     {
-      candor_has_monome_focus = argv[0]->i == 6001;
+      candor_has_monome_focus = (argv[0]->i == candor_osc_port);
+      printf("received focus notification %d %d %d\n", argv[0]->i, candor_osc_port, candor_has_monome_focus);
+      
     }
 }
 int osc_serialosc_device_handler(const char *path, const char *types, lo_arg ** argv,
@@ -2077,6 +2082,7 @@ int osc_serialosc_device_handler(const char *path, const char *types, lo_arg ** 
       monome_device_type=argv[1]->s;
       monome_serialosc_port=argv[2]->i;
     }
+  candor_grab_focus();
   
   return 0;
 } /* osc_serialosc_device_handler */
@@ -2279,7 +2285,7 @@ int osc_islooping_handler(const char *path, const char *types, lo_arg ** argv,
 int quit_candor() {
   /* clean-up */
   fprintf(stdout, "Closing monome...\n");
-  monome_close(monome);
+  /* monome_close(monome); */
   fprintf(stdout, "Cleaning up ficus...\n");
   ficus_clean();
   fprintf(stdout, "Flushing stdout...\n");
@@ -2546,14 +2552,9 @@ main(int argc, char *argv[])
   printf("prefix: %s,  ", sampler_prefix);
   printf("file_path: %s\n\n\n", file_path);
 
-  /* open the monome device */
-  if( !(monome = monome_open(monome_device_addr, "8000")) ){
-    fprintf(stderr, "ERROR failed to open monome device. Aborting!");
-    return -1;
-  }
   /* clear monome LEDs */
   candor_led_all( 0);
-
+  printf("setup candor...\n");
   /* candor general setup */
   setup_candor("candor", sampler_path, sampler_prefix, 24, rawmidi_device);
 
@@ -2569,14 +2570,18 @@ main(int argc, char *argv[])
       load_from_file(file_path);
   
   int key = 0;
-  while(!key) {
+  while(1) {
     key = getchar();
     usleep(10000);
+    if(key) {
+      candor_grab_focus();
+      printf("bffff...\n");
+    }
   }
 
   /* clean-up */
-  monome_close(monome);
   ficus_clean();
+  // FIXME clean up lo_server
 
   return 0;
 } /* main */
