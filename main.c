@@ -173,7 +173,7 @@ init_default_state(monome_t *monome)
   sampler_capture_limit_leds[2]=48;
 
   seq_bpm=7.5;
-  monome_led_on(monome,0,6);
+  candor_led_on(monome,0,6);
 
   sequencer_bank_pos[1]=1;
 
@@ -189,7 +189,7 @@ clear_frame(const monome_event_t *e, int xmod, int ymod)
   int x, y;
   for( x=0; x<8; x++)
     for( y=0; y<6; y++)
-      monome_led_off(e->monome, x+xmod, y+ymod);
+      candor_led_off(e->monome, x+xmod, y+ymod);
 
 } /* clear_frame */
  
@@ -200,7 +200,7 @@ clear_frame_monome(monome_t *monome, int xmod, int ymod)
   int x, y;
   for( x=0; x<8; x++)
     for( y=0; y<6; y++)
-      monome_led_off(monome, x+xmod, y+ymod);
+      candor_led_off(monome, x+xmod, y+ymod);
 
 } /* clear_frame_monome */
 
@@ -229,7 +229,7 @@ fill_sampler_row(monome_t *monome, int y, int x, int xmod)
 {
   int i;
   for(i=0; i<x; i++)
-    monome_led_on(monome, i+xmod, y);
+    candor_led_on(monome, i+xmod, y);
 } /* fill_sampler_row */
 
 void
@@ -729,7 +729,7 @@ handle_press(const monome_event_t *e, void *data)
       if( (button >= 48) && (button < 56) )
 	{
 	  mixer_row_grid[x][y] = !mixer_row_grid[x][y];
-	  monome_led_set(e->monome, x, y, mixer_row_grid[x][y]);
+	  candor_led_set(e->monome, x, y, mixer_row_grid[x][y]);
 	  if(sampler_monitors[button-48])
 	    {
 	      ficus_jackmonitor(button-48, 0, 0);
@@ -772,7 +772,7 @@ handle_press(const monome_event_t *e, void *data)
       /* SAMPLER global mute button */
       if( button == 63 )
 	{
-	  monome_led_set(e->monome, x, y, 1);
+	  candor_led_set(e->monome, x, y, 1);
 	  for( c=0; c<48; c++)
 	    ficus_killplayback(c);
 	  return;
@@ -990,9 +990,9 @@ playback_led_state(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_page_leds[bank] )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* playback_led_state */
 
 void
@@ -1001,9 +1001,9 @@ loop_led_state(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_loop_leds[bank] )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* loop_led_state */
 
 void
@@ -1012,9 +1012,9 @@ modifier_led_state(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x-8, y);
   
   if( playback_modifiers_enable[bank] )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* modifier_led_state */
 
 void
@@ -1028,15 +1028,15 @@ capture_led_state(monome_t *monome, int x, int y)
       /* random state between 0 and 1 == blinking lights!,
        meant to indicate this sample is 'armed for capture */
       state = (int)rand()/(int)(5) % 2;
-      monome_led_set(monome, x, y, state);
+      candor_led_set(monome, x, y, state);
     }
   else
     if( sampler_capture_leds[1][bank] )
-	monome_led_on(monome, x, y);
+	candor_led_on(monome, x, y);
     else
       if( !sampler_capture_leds[0][bank] &&
 	  !sampler_capture_leds[1][bank] )
-	monome_led_off(monome, x, y);
+	candor_led_off(monome, x, y);
 } /* capture_led_state */
 
 void
@@ -1048,7 +1048,7 @@ capture_limit_led_state(monome_t *monome, int x, int y)
   if( sampler_capture_limit_leds[2] == bank)
     {
       state = (int)rand()/(int)(5) % 2;
-      monome_led_set(monome, x, y, state);
+      candor_led_set(monome, x, y, state);
     }  
 } /* capture_limit_led_state */
 
@@ -1059,9 +1059,9 @@ inmix_led_state(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_inmix_leds[bank] == 1 )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* inmix_led_state */
 
 void 
@@ -1071,9 +1071,9 @@ outmix_led_state(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_outmix_leds[bank] == 1 )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* outmix_led_state */
 
 void 
@@ -1083,7 +1083,7 @@ playhead_led_refresh(monome_t *monome, int x, int y)
   int bank = coordinate_to_led(x, y);
   clear_frame_monome(monome, 0, 0);
   if( seq_playhead == bank )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
 } /* playhead_led_refresh */
 
 void
@@ -1095,13 +1095,13 @@ tap_recorder_led_state(monome_t *monome, int x, int y)
   if( tap_recorder_leds[0] && !tap_recorder_leds[1])
     {
       state = (int)rand()/(int)10 % 2;
-      monome_led_set(monome, x, y, state);
+      candor_led_set(monome, x, y, state);
     }
   else
     if( tap_recorder_leds[1] )
-      monome_led_set(monome, x, y, 1);
+      candor_led_set(monome, x, y, 1);
     else
-      monome_led_set(monome, x, y, 0);
+      candor_led_set(monome, x, y, 0);
 } /* tap_recorder_led_state */
 
 void
@@ -1117,9 +1117,9 @@ seq_transport_led_state(monome_t *monome, int x, int y)
       {}
     else
       if( sequencer_transport_led )
-	monome_led_set(monome, x, y, 1);
+	candor_led_set(monome, x, y, 1);
       else
-	monome_led_set(monome, x, y, 0);
+	candor_led_set(monome, x, y, 0);
 
 } /* tap_recorder_led_state */
 
@@ -1135,9 +1135,9 @@ voice_select_led_state(monome_t *monome, int x, int y)
       pagemode=c;
   
   if( sequencer_voice_leds[pagemode-1][bank] )
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
   else
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
 } /* voice_select_led_state */
 
 void
@@ -1154,10 +1154,10 @@ voice_assignment_led_state(monome_t *monome, int x, int y)
    
   /* just leds */
   if( sequencer_voice_map[pagemode-1][bank]==0)
-    monome_led_off(monome, x, y);
+    candor_led_off(monome, x, y);
   else
     if( sequencer_voice_map[pagemode-1][bank]==sequencer_bank_select+1 )
-      monome_led_on(monome, x, y);
+      candor_led_on(monome, x, y);
 } /* voice_assignment_led_state */
 
 void
@@ -1170,7 +1170,7 @@ selected_assignment_led_state(monome_t *monome, int x, int y)
   int pagemode=0;
 
   if(bank==sequencer_bank_select)
-    monome_led_on(monome, x, y);
+    candor_led_on(monome, x, y);
 
 } /* selected_assignment_led_state */
 
@@ -1613,25 +1613,25 @@ state_manager(monome_t *monome)
       for( c = 1; c < 7; c++)
 	{
 	  if( sequencer_bank_pos[c] == 1)
-	    monome_led_on(monome, c, 15);
+	    candor_led_on(monome, c, 15);
 	  else
-	    monome_led_off(monome, c, 15);
+	    candor_led_off(monome, c, 15);
 	}
 
       /* check sequencer control row LEDs */
       for( c = 0; c < 7; c++)
 	{
 	  if( sequencer_page_pos[c] == 1)
-	    monome_led_on(monome, c, 7);
+	    candor_led_on(monome, c, 7);
 	  else
-	    monome_led_off(monome, c, 7);
+	    candor_led_off(monome, c, 7);
 	}
 
       /* handle blink for external osc clock */
       if (external_clock_enable == 1)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  monome_led_set(monome, 7, 6, blink_state);
+	  candor_led_set(monome, 7, 6, blink_state);
 	  if( sequencer_page_pos[0]==1 )
 	    {
 	      funcptr_led_change=&playhead_led_refresh;
@@ -1642,63 +1642,63 @@ state_manager(monome_t *monome)
 	/* fill sequencer tempo row LEDs */      
 	for( c=0; c<8; c++)
 	  if(seq_bpm_led==0)
-	    monome_led_on(monome,0,6);
+	    candor_led_on(monome,0,6);
 	  else
 	    if(c<seq_bpm_led)
-	      monome_led_on(monome,c,6);
+	      candor_led_on(monome,c,6);
 	    else
-	      monome_led_off(monome,c,6);
+	      candor_led_off(monome,c,6);
 
       /* check sampler control row LEDs */
       for( c = 0; c < 8; c++)
 	{
 	  if( sampler_page_pos[c] == 1)
-	    monome_led_on(monome, c+8, 7);
+	    candor_led_on(monome, c+8, 7);
 	  else
-	    monome_led_off(monome, c+8, 7);
+	    candor_led_off(monome, c+8, 7);
 	}
 
       /* fill playback-speed control row LEDs */
       for( c=0; c<8; c++)
 	if( (c<=playback_speed_led-1) && (c>=3) )
-	  monome_led_on(monome,c,14);
+	  candor_led_on(monome,c,14);
 	else
 	  if( (c>=playback_speed_led-1) && (c<=3) )
-	    monome_led_on(monome,c,14);
+	    candor_led_on(monome,c,14);
 	  else
 	    if(c==playback_speed_led-1)
-	      monome_led_on(monome,c,14);
+	      candor_led_on(monome,c,14);
 	    else
-	      monome_led_off(monome,c,14);
+	      candor_led_off(monome,c,14);
 
       /* fill sampler attack ramp LEDs */      
       for( c=0; c<8; c++)
 	if(playback_rampup_led==0)
-	  monome_led_on(monome,8,14);
+	  candor_led_on(monome,8,14);
 	else
 	  if(c<playback_rampup_led)
-	    monome_led_on(monome,c+8,14);
+	    candor_led_on(monome,c+8,14);
 	  else
-	    monome_led_off(monome,c+8,14);
+	    candor_led_off(monome,c+8,14);
 
       /* fill sampler decay ramp LEDs */
       for( c=0; c<8; c++)
 	if(playback_rampdown_led==0)
-	  monome_led_on(monome,8,15);
+	  candor_led_on(monome,8,15);
 	else
 	  if( c<playback_rampdown_led )
-	    monome_led_on(monome,c+8,15);
+	    candor_led_on(monome,c+8,15);
 	  else
-	    monome_led_off(monome,c+8,15);
+	    candor_led_off(monome,c+8,15);
 
       /* handle blink for tap tempo decrease */
       if(seq_bpm_dec_led)
 	{
 	  state_tempo_dec++;
-	  monome_led_on(monome,0,15);
+	  candor_led_on(monome,0,15);
 	  if(state_tempo_dec==2)
 	    {
-	      monome_led_off(monome,0,15);
+	      candor_led_off(monome,0,15);
 	      state_tempo_dec=0;
 	      seq_bpm_dec_led=0;
 	    }
@@ -1708,10 +1708,10 @@ state_manager(monome_t *monome)
       if(seq_bpm_inc_led)
 	{
 	  state_tempo_inc++;
-	  monome_led_on(monome,7,15);
+	  candor_led_on(monome,7,15);
 	  if(state_tempo_inc==2)
 	    {
-	      monome_led_off(monome,7,15);
+	      candor_led_off(monome,7,15);
 	      state_tempo_inc=0;
 	      seq_bpm_inc_led=0;
 	    }
@@ -1721,26 +1721,26 @@ state_manager(monome_t *monome)
       if(playback_upnoclip)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  monome_led_set(monome, 8, 14, blink_state);
+	  candor_led_set(monome, 8, 14, blink_state);
 	}
       else
-	monome_led_on(monome,8,14);
+	candor_led_on(monome,8,14);
 
       /* handle blink for decay ramp's no-clip function */
       if(playback_downnoclip)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  monome_led_set(monome, 8, 15, blink_state);
+	  candor_led_set(monome, 8, 15, blink_state);
 	}
       else
-	monome_led_on(monome,8,15);
+	candor_led_on(monome,8,15);
       
       /* handle blink for reverse playback speed function */
       for(c=1;c<=8;c++)
 	if(playback_reverse&&(c==playback_speed_led))
 	  {
 	    blink_state = (int)rand()/(int)(5) % 2;
-	    monome_led_set(monome, c-1, 14, blink_state);
+	    candor_led_set(monome, c-1, 14, blink_state);
 	  }
 
       /* handle blink for reverse playback speed function */
@@ -1748,7 +1748,7 @@ state_manager(monome_t *monome)
 	if(playback_reverse&&(c==playback_speed_led))
 	  {
 	    blink_state = (int)rand()/(int)(5) % 2;
-	    monome_led_set(monome, c-1, 14, blink_state);
+	    candor_led_set(monome, c-1, 14, blink_state);
 	  }
 
       /* sending too many messages to serialoscd
@@ -2533,7 +2533,7 @@ main(int argc, char *argv[])
     return -1;
   }
   /* clear monome LEDs */
-  monome_led_all(monome, 0);
+  candor_led_all(monome, 0);
 
   /* register our button presses callback for triggering events
    and maintaining state */
