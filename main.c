@@ -18,10 +18,10 @@ Copyright 2014 murray foster */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <monome.h>
 #include <jack/jack.h>
 #include <alsa/asoundlib.h>
 #include <lo/lo.h>
+#include "monome_cache.h"
 
 #include "libficus.h"
 
@@ -149,6 +149,7 @@ char *monome_name;
 char *monome_name_user_defined="init";
 char *monome_device_type;
 int monome_serialosc_port = 0;
+int candor_osc_port = 0;
 
 /* serialosc host, default =  127.0.0.1, port: 12002 */
 int osc_interface_disable = 0;
@@ -160,7 +161,7 @@ char *osc_port_out = NULL;
 int external_clock_enable = 0;
 
 void
-init_default_state(monome_t *monome)
+init_default_state(void)
 {
   /* on sampler, we start out on the 'playback' page.
      on sequencer, we start out on the first page */
@@ -173,7 +174,7 @@ init_default_state(monome_t *monome)
   sampler_capture_limit_leds[2]=48;
 
   seq_bpm=7.5;
-  candor_led_on(monome,0,6);
+  candor_led_on(0,6);
 
   sequencer_bank_pos[1]=1;
 
@@ -183,24 +184,24 @@ init_default_state(monome_t *monome)
 } /* init_default_state */
 
 void
-clear_frame(const monome_event_t *e, int xmod, int ymod)
+clear_frame(int xmod, int ymod)
 {
   /* black out top 6 rows of interactive LEDs */
   int x, y;
   for( x=0; x<8; x++)
     for( y=0; y<6; y++)
-      candor_led_off(e->monome, x+xmod, y+ymod);
+      candor_led_off( x+xmod, y+ymod);
 
 } /* clear_frame */
  
 void
-clear_frame_monome(monome_t *monome, int xmod, int ymod)
+clear_frame_monome(int xmod, int ymod)
 {
   /* black out top 6 rows of interactive LEDs */
   int x, y;
   for( x=0; x<8; x++)
     for( y=0; y<6; y++)
-      candor_led_off(monome, x+xmod, y+ymod);
+      candor_led_off( x+xmod, y+ymod);
 
 } /* clear_frame_monome */
 
@@ -225,64 +226,64 @@ clear_armed()
 } /* clear_armed */
 
 void
-fill_sampler_row(monome_t *monome, int y, int x, int xmod)
+fill_sampler_row(int y, int x, int xmod)
 {
   int i;
   for(i=0; i<x; i++)
-    candor_led_on(monome, i+xmod, y);
+    candor_led_on( i+xmod, y);
 } /* fill_sampler_row */
 
 void
-fill_to_button(monome_t *monome, int button)
+fill_to_button(int button)
 {
   /* fill led rows of this quadrant to the given button */
   int x, y;
   
   /* first, clear all LEDs */
-  clear_frame_monome(monome, 8, 0);
+  clear_frame_monome(8, 0);
 
   /* figure out how many LEDs to light up and do it */
   if( button < 8 )
-    fill_sampler_row(monome, 0, button+1, 8);
+    fill_sampler_row(0, button+1, 8);
   else
     if( (button < 16) && (button > 7) )
       {
-	fill_sampler_row(monome, 0, 8, 8);
-	fill_sampler_row(monome, 1, button-7, 8);
+	fill_sampler_row(0, 8, 8);
+	fill_sampler_row(1, button-7, 8);
       }
     else
       if( (button < 24) && (button > 15))
 	{
-	  fill_sampler_row(monome, 0, 8, 8);
-	  fill_sampler_row(monome, 1, 8, 8);
-	  fill_sampler_row(monome, 2, button-15, 8);
+	  fill_sampler_row( 0, 8, 8);
+	  fill_sampler_row( 1, 8, 8);
+	  fill_sampler_row( 2, button-15, 8);
 	}
       else
 	if( (button < 32) && (button > 23) )
 	  {
-	    fill_sampler_row(monome, 0, 8, 8);
-	    fill_sampler_row(monome, 1, 8, 8);
-	    fill_sampler_row(monome, 2, 8, 8);
-	    fill_sampler_row(monome, 3, button-23, 8);
+	    fill_sampler_row( 0, 8, 8);
+	    fill_sampler_row( 1, 8, 8);
+	    fill_sampler_row( 2, 8, 8);
+	    fill_sampler_row( 3, button-23, 8);
 	  }
 	else
 	  if( (button < 40) && (button > 31) )
 	    {
-	      fill_sampler_row(monome, 0, 8, 8);
-	      fill_sampler_row(monome, 1, 8, 8);
-	      fill_sampler_row(monome, 2, 8, 8);
-	      fill_sampler_row(monome, 3, 8, 8);
-	      fill_sampler_row(monome, 4, button-31, 8);
+	      fill_sampler_row( 0, 8, 8);
+	      fill_sampler_row( 1, 8, 8);
+	      fill_sampler_row( 2, 8, 8);
+	      fill_sampler_row( 3, 8, 8);
+	      fill_sampler_row( 4, button-31, 8);
 	    }
 	  else
 	      if( (button < 48) && (button > 39) )
 		{
-		  fill_sampler_row(monome, 0, 8, 8);
-		  fill_sampler_row(monome, 1, 8, 8);
-		  fill_sampler_row(monome, 2, 8, 8);
-		  fill_sampler_row(monome, 3, 8, 8);
-		  fill_sampler_row(monome, 4, 8, 8);
-		  fill_sampler_row(monome, 5, button-39, 8);
+		  fill_sampler_row( 0, 8, 8);
+		  fill_sampler_row( 1, 8, 8);
+		  fill_sampler_row( 2, 8, 8);
+		  fill_sampler_row( 3, 8, 8);
+		  fill_sampler_row( 4, 8, 8);
+		  fill_sampler_row( 5, button-39, 8);
 		}
 	      else
 		fprintf(stderr, "candor: fill_to_button() is FUBARD\n");
@@ -375,7 +376,7 @@ int candor_playback(int samplenum)
 }/* candor_playback */
 
 int
-sampler_page_chooser(const monome_event_t *e, int button)
+sampler_page_chooser(int button)
 {
   unsigned int c, page=0;
   int finallimit=0;
@@ -546,7 +547,7 @@ sampler_page_chooser(const monome_event_t *e, int button)
 } /* sampler_page_chooser */
 
 int
-sequencer_page_chooser(const monome_event_t *e, int button)
+sequencer_page_chooser(int button)
 {
   unsigned int c, page=0;
   
@@ -563,7 +564,7 @@ sequencer_page_chooser(const monome_event_t *e, int button)
 } /* sequencer_page_chooser */
 
 int
-togglevoice_page_chooser(const monome_event_t *e, int button)
+togglevoice_page_chooser(int button)
 {
   unsigned int c, page=0;
   int x=0;
@@ -593,18 +594,15 @@ togglevoice_page_chooser(const monome_event_t *e, int button)
 } /* togglevoice_page_chooser */
 
 int
-togglebank_page_chooser(const monome_event_t *e, int button)
+togglebank_page_chooser(int button)
 {
   sequencer_bank_select=button;
 } /* togglebank_voice_chooser */
 
 void
-handle_press(const monome_event_t *e, void *data) 
+handle_press(unsigned int x, unsigned int y)
 {
-  unsigned int x, y, x2, y2, button, c;
-
-  x = e->grid.x;
-  y = e->grid.y;
+  unsigned int x2, y2, button, c;
 
   /* store monome state change */
   grid[x][y]=1;
@@ -620,7 +618,7 @@ handle_press(const monome_event_t *e, void *data)
       if( button < 48 && sequencer_page_pos[0] == 0)
 	{
 	  /* only do this if we're NOT on the first sequencer page */
-	  sequencer_page_chooser(e, button);
+	  sequencer_page_chooser(button);
 	}
 
       if( grid[0][7] && button==55)
@@ -673,7 +671,7 @@ handle_press(const monome_event_t *e, void *data)
 	      for( c = 0; c < 7; c++)
 		sequencer_page_pos[c] = 0;
 	      sequencer_page_pos[button - 56] = 1;
-	      clear_frame(e, 0, 0);
+	      clear_frame(0, 0);
 	    }
 	}
 
@@ -723,13 +721,13 @@ handle_press(const monome_event_t *e, void *data)
 
       /* SAMPLER, top 48 pads */
       if( button < 48 )
-	  sampler_page_chooser(e, button);
+	  sampler_page_chooser(button);
 
       /* SAMPLER, turn jack monitors on or off (8,  6) .. (15, 6) */
       if( (button >= 48) && (button < 56) )
 	{
 	  mixer_row_grid[x][y] = !mixer_row_grid[x][y];
-	  candor_led_set(e->monome, x, y, mixer_row_grid[x][y]);
+	  candor_led_set( x, y, mixer_row_grid[x][y]);
 	  if(sampler_monitors[button-48])
 	    {
 	      ficus_jackmonitor(button-48, 0, 0);
@@ -764,7 +762,7 @@ handle_press(const monome_event_t *e, void *data)
 	    sampler_page_pos[c] = 0;
 	  sampler_page_pos[button - 56] = 1;
 	  
-	  clear_frame(e, 8, 0);
+	  clear_frame(8, 0);
 	  
 	  return;
 	}
@@ -772,7 +770,7 @@ handle_press(const monome_event_t *e, void *data)
       /* SAMPLER global mute button */
       if( button == 63 )
 	{
-	  candor_led_set(e->monome, x, y, 1);
+	  candor_led_set( x, y, 1);
 	  for( c=0; c<48; c++)
 	    ficus_killplayback(c);
 	  return;
@@ -787,7 +785,7 @@ handle_press(const monome_event_t *e, void *data)
 
       /* SEQUENCER-BANKS, top 48 pads */
       if( button < 48 )
-	togglevoice_page_chooser(e, button);
+	togglevoice_page_chooser(button);
 
       /* SAMPLER-SEQUENCER, playback row */
       if( (button>47) && (button<56) )
@@ -846,7 +844,7 @@ handle_press(const monome_event_t *e, void *data)
 	  for( c = 1; c < 7; c++)
 	    sequencer_bank_pos[c] = 0;
 	  sequencer_bank_pos[button - 56] = 1;
-	  clear_frame(e, 0, 8);
+	  clear_frame(0, 8);
 	}
     }  
 
@@ -860,9 +858,9 @@ handle_press(const monome_event_t *e, void *data)
       /* SEQUENCER-VOICE-SELECT, top 48 pads */
       if( button < 48 )
 	{
-	  togglebank_page_chooser(e, button);
-	  clear_frame(e,8,8);
-	  clear_frame(e,0,8);
+	  togglebank_page_chooser(button);
+	  clear_frame(8,8);
+	  clear_frame(0,8);
 	}
       /* SAMPLER-SEQUENCER, playback row */
       if( (button>47) && (button<56) )
@@ -969,13 +967,10 @@ handle_press(const monome_event_t *e, void *data)
 } /* handle_press */
 
 void
-handle_lift(const monome_event_t *e, void *data)
+handle_lift(unsigned int x, unsigned int y)
 {
 
-  unsigned int x, y, x2;
-
-  x = e->grid.x;
-  y = e->grid.y;
+  unsigned int x2;
 
   x2 = x - 8;
 
@@ -984,41 +979,56 @@ handle_lift(const monome_event_t *e, void *data)
 
 } /* handle_lift */
 
+int monome_key_handler(const char *path, const char *types, lo_arg ** argv,
+		       int argc, void *data, void *user_data) {
+  (void) path;
+  (void) types;
+  (void) data;
+  (void) user_data;
+  if(argc >= 3) {
+    if(argv[2]->i) {
+      handle_press(argv[0]->i, argv[1]->i);
+    }
+    else {
+      handle_lift(argv[0]->i, argv[1]->i);
+    }
+  }
+}
 void
-playback_led_state(monome_t *monome, int x, int y)
+playback_led_state( int x, int y)
 {
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_page_leds[bank] )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* playback_led_state */
 
 void
-loop_led_state(monome_t *monome, int x, int y)
+loop_led_state( int x, int y)
 {
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_loop_leds[bank] )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* loop_led_state */
 
 void
-modifier_led_state(monome_t *monome, int x, int y)
+modifier_led_state( int x, int y)
 {
   int bank = coordinate_to_led(x-8, y);
   
   if( playback_modifiers_enable[bank] )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* modifier_led_state */
 
 void
-capture_led_state(monome_t *monome, int x, int y)
+capture_led_state( int x, int y)
 {
   int bank = coordinate_to_led(x-8, y);
   int state = 0;
@@ -1028,19 +1038,19 @@ capture_led_state(monome_t *monome, int x, int y)
       /* random state between 0 and 1 == blinking lights!,
        meant to indicate this sample is 'armed for capture */
       state = (int)rand()/(int)(5) % 2;
-      candor_led_set(monome, x, y, state);
+      candor_led_set( x, y, state);
     }
   else
     if( sampler_capture_leds[1][bank] )
-	candor_led_on(monome, x, y);
+	candor_led_on( x, y);
     else
       if( !sampler_capture_leds[0][bank] &&
 	  !sampler_capture_leds[1][bank] )
-	candor_led_off(monome, x, y);
+	candor_led_off( x, y);
 } /* capture_led_state */
 
 void
-capture_limit_led_state(monome_t *monome, int x, int y)
+capture_limit_led_state( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x-8, y);
@@ -1048,46 +1058,46 @@ capture_limit_led_state(monome_t *monome, int x, int y)
   if( sampler_capture_limit_leds[2] == bank)
     {
       state = (int)rand()/(int)(5) % 2;
-      candor_led_set(monome, x, y, state);
+      candor_led_set( x, y, state);
     }  
 } /* capture_limit_led_state */
 
 void 
-inmix_led_state(monome_t *monome, int x, int y)
+inmix_led_state( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_inmix_leds[bank] == 1 )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* inmix_led_state */
 
 void 
-outmix_led_state(monome_t *monome, int x, int y)
+outmix_led_state( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x-8, y);
 
   if( sampler_outmix_leds[bank] == 1 )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* outmix_led_state */
 
 void 
-playhead_led_refresh(monome_t *monome, int x, int y)
+playhead_led_refresh( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x, y);
-  clear_frame_monome(monome, 0, 0);
+  clear_frame_monome(0, 0);
   if( seq_playhead == bank )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
 } /* playhead_led_refresh */
 
 void
-tap_recorder_led_state(monome_t *monome, int x, int y)
+tap_recorder_led_state( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x, y);
@@ -1095,17 +1105,17 @@ tap_recorder_led_state(monome_t *monome, int x, int y)
   if( tap_recorder_leds[0] && !tap_recorder_leds[1])
     {
       state = (int)rand()/(int)10 % 2;
-      candor_led_set(monome, x, y, state);
+      candor_led_set( x, y, state);
     }
   else
     if( tap_recorder_leds[1] )
-      candor_led_set(monome, x, y, 1);
+      candor_led_set( x, y, 1);
     else
-      candor_led_set(monome, x, y, 0);
+      candor_led_set( x, y, 0);
 } /* tap_recorder_led_state */
 
 void
-seq_transport_led_state(monome_t *monome, int x, int y)
+seq_transport_led_state( int x, int y)
 {
   int state;
   int bank = coordinate_to_led(x, y);
@@ -1117,14 +1127,14 @@ seq_transport_led_state(monome_t *monome, int x, int y)
       {}
     else
       if( sequencer_transport_led )
-	candor_led_set(monome, x, y, 1);
+	candor_led_set( x, y, 1);
       else
-	candor_led_set(monome, x, y, 0);
+	candor_led_set( x, y, 0);
 
 } /* tap_recorder_led_state */
 
 void
-voice_select_led_state(monome_t *monome, int x, int y)
+voice_select_led_state( int x, int y)
 {
   int state, c;
   int bank = coordinate_to_led(x, y);
@@ -1135,13 +1145,13 @@ voice_select_led_state(monome_t *monome, int x, int y)
       pagemode=c;
   
   if( sequencer_voice_leds[pagemode-1][bank] )
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
   else
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
 } /* voice_select_led_state */
 
 void
-voice_assignment_led_state(monome_t *monome, int x, int y)
+voice_assignment_led_state( int x, int y)
 {
   int state, c;
   int y2=y-8;
@@ -1154,14 +1164,14 @@ voice_assignment_led_state(monome_t *monome, int x, int y)
    
   /* just leds */
   if( sequencer_voice_map[pagemode-1][bank]==0)
-    candor_led_off(monome, x, y);
+    candor_led_off( x, y);
   else
     if( sequencer_voice_map[pagemode-1][bank]==sequencer_bank_select+1 )
-      candor_led_on(monome, x, y);
+      candor_led_on( x, y);
 } /* voice_assignment_led_state */
 
 void
-selected_assignment_led_state(monome_t *monome, int x, int y)
+selected_assignment_led_state( int x, int y)
 {
   int c;
   int x2=x-8;
@@ -1170,12 +1180,12 @@ selected_assignment_led_state(monome_t *monome, int x, int y)
   int pagemode=0;
 
   if(bank==sequencer_bank_select)
-    candor_led_on(monome, x, y);
+    candor_led_on( x, y);
 
 } /* selected_assignment_led_state */
 
 void
-button_to_coordinate(monome_t *monome, int button, int xmod, int ymod, void (*funcptr_led)(monome_t *monome, int, int))
+button_to_coordinate( int button, int xmod, int ymod, void (*funcptr_led)(int, int))
 {
   /* generic function to handle calling functions that
      require a button number converted to coordinates.
@@ -1184,28 +1194,28 @@ button_to_coordinate(monome_t *monome, int button, int xmod, int ymod, void (*fu
 
   /* filter buttons down */
   if( button < 8 )
-    (*funcptr_led)(monome, button+xmod, 0+ymod);
+    (*funcptr_led)(button+xmod, 0+ymod);
     else
       if( (button < 16) && (button > 7) )
-	(*funcptr_led)(monome, button-8+xmod, 1+ymod);
+	(*funcptr_led)(button-8+xmod, 1+ymod);
       else
 	if( (button < 24) && (button > 15))
-	  (*funcptr_led)(monome, button-16+xmod, 2+ymod);
+	  (*funcptr_led)(button-16+xmod, 2+ymod);
 	else
 	  if( (button < 32) && (button > 23) )
-	    (*funcptr_led)(monome, button-24+xmod, 3+ymod);
+	    (*funcptr_led)(button-24+xmod, 3+ymod);
 	  else
 	    if( (button < 40) && (button > 31) )
-	      (*funcptr_led)(monome, button-32+xmod, 4+ymod);
+	      (*funcptr_led)(button-32+xmod, 4+ymod);
 	    else
 	      if( (button < 48) && (button > 39) )
-		(*funcptr_led)(monome, button-40+xmod, 5+ymod);
+		(*funcptr_led)(button-40+xmod, 5+ymod);
 	      else
 		if( (button < 56) && (button > 47) )
-		  (*funcptr_led)(monome, button-48+xmod, 6+ymod);
+		  (*funcptr_led)(button-48+xmod, 6+ymod);
 		else
 		  if( (button < 64) && (button > 55) )
-		    (*funcptr_led)(monome, button-56+xmod, 7+ymod);
+		    (*funcptr_led)(button-56+xmod, 7+ymod);
 } /* button_to_coordinate */
 
 void
@@ -1216,7 +1226,7 @@ sample_playback_trigger (int sample_num)
 } /* sample_playback_trigger */
 
 void
-state_change(monome_t *monome, int x, int y)
+state_change( int x, int y)
 {
   char tempstring[100] = {0};
 
@@ -1271,15 +1281,15 @@ state_change(monome_t *monome, int x, int y)
 } /* state_change */
 
 void
-playhead_nextstep(monome_t *monome)
+playhead_nextstep()
 {
   /* ***this function really exists for the tap recorder*** */
 
   if(sequencer_page_pos[0])
     {
-      void (*funcptr_led_change)(monome_t *monome, int, int);
+      void (*funcptr_led_change)( int, int);
       funcptr_led_change=&playhead_led_refresh;
-      button_to_coordinate(monome, seq_playhead, 0, 0, funcptr_led_change);
+      button_to_coordinate(seq_playhead, 0, 0, funcptr_led_change);
     }
   seq_playhead+=1;
   if( seq_playhead==48 )
@@ -1334,12 +1344,12 @@ void trigger_step(int step)
 } /* trigger_step */
 
 void
-tap_recorder(monome_t *monome)
+tap_recorder()
 {
   int msdelay=10000; /*10000microseconds or 10milliseconds */
   int count=0;
   int stepcount=0;
-  void (*funcptr_led_change)(monome_t *monome, int, int);
+  void (*funcptr_led_change)( int, int);
 
   while(tap_recorder_leds[2])
     {
@@ -1351,7 +1361,7 @@ tap_recorder(monome_t *monome)
 	  if(sequencer_nextstep_pretap)
 	    {
 	      trigger_step(seq_playhead);
-	      playhead_nextstep(monome);
+	      playhead_nextstep();
 	      recorded_steps[count]=1;
 	      sequencer_nextstep_pretap=0;
 	      seq_stepcount++;
@@ -1372,7 +1382,7 @@ tap_recorder(monome_t *monome)
 	{
 	  if(recorded_steps[count])
 	    {
-	      playhead_nextstep(monome);
+	      playhead_nextstep();
 	      stepcount++;
 	      trigger_step(seq_playhead);
 	    }	  
@@ -1392,10 +1402,10 @@ tap_recorder(monome_t *monome)
 } /* tap_recorder */
 
 void
-metronome(monome_t *monome)
+metronome()
 {
   int ms = 0;
-  void (*funcptr_led_change)(monome_t *monome, int, int);
+  void (*funcptr_led_change)( int, int);
 
   while( external_clock_enable==0 )
     {
@@ -1408,7 +1418,7 @@ metronome(monome_t *monome)
 	      if( sequencer_page_pos[0]==1 )
 		{
 		  funcptr_led_change=&playhead_led_refresh;
-		  button_to_coordinate(monome, seq_playhead, 0, 0, funcptr_led_change);
+		  button_to_coordinate(seq_playhead, 0, 0, funcptr_led_change);
 		}
 	      
 	      trigger_step(seq_playhead);
@@ -1425,7 +1435,7 @@ metronome(monome_t *monome)
       else
 	{
 	  funcptr_led_change=&playhead_led_refresh;
-	  button_to_coordinate(monome, seq_playhead, 0, 0, funcptr_led_change);
+	  button_to_coordinate(seq_playhead, 0, 0, funcptr_led_change);
 	  ms=(60.0f / (float)seq_bpm) * 1000 * 1000;
 	  usleep(ms);
 	}
@@ -1433,15 +1443,16 @@ metronome(monome_t *monome)
 } /* metronome */
 
 void
-seq_transport_thread(monome_t *monome)
+seq_transport_thread(void *foo)
 {
+  (void) foo;
   while(1)
     {
       if( tap_recorder_leds[0] )
-	tap_recorder(monome);
+	tap_recorder();
   
       if( external_clock_enable == 0)
-	metronome(monome);
+	metronome();
       else
 	usleep(10);
     }
@@ -1449,11 +1460,12 @@ seq_transport_thread(monome_t *monome)
 
 
 void
-state_manager(monome_t *monome)
+state_manager(void *foo)
 {
+  (void) foo;
   /* declare and assign function pointers */
-  void (*funcptr_sampler_state)(monome_t *monome, int, int);
-  void (*funcptr_led_change)(monome_t *monome, int, int);
+  void (*funcptr_sampler_state)( int, int);
+  void (*funcptr_led_change)( int, int);
   int state_tempo_inc=0;
   int state_tempo_dec=0;
   int blink_state=0;
@@ -1488,7 +1500,7 @@ state_manager(monome_t *monome)
       for( c=0; c<48; c++)
 	{
 	  /* check audio backend status */ 
-	  button_to_coordinate(monome, c, 8, 0, funcptr_sampler_state);
+	  button_to_coordinate(c, 8, 0, funcptr_sampler_state);
 	  
 	  /* only VISIBLY manipulate LED state for each
 	     function when that PAGE/MODE is CURRENTLY
@@ -1500,36 +1512,36 @@ state_manager(monome_t *monome)
 	    {
 	    case 0:
 	      funcptr_led_change=&playback_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 1:
 	      funcptr_led_change=&loop_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 2:
 	      funcptr_led_change=&modifier_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 3:
 	      funcptr_led_change=&capture_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 4:
 	      if( sampler_capture_limit_leds[0] != sampler_capture_limit_leds[1] )
 		{
-		  fill_to_button(monome, sampler_capture_limit_leds[0]);
+		  fill_to_button(sampler_capture_limit_leds[0]);
 	          sampler_capture_limit_leds[1]=sampler_capture_limit_leds[0];
 		}
 	      funcptr_led_change=&capture_limit_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 5:
 	      funcptr_led_change=&inmix_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    case 6:
 	      funcptr_led_change=&outmix_led_state;
-	      button_to_coordinate(monome, c, 8, 0, funcptr_led_change);
+	      button_to_coordinate(c, 8, 0, funcptr_led_change);
 	      break;
 	    }
 
@@ -1540,27 +1552,27 @@ state_manager(monome_t *monome)
 	    {
 	    case 1:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    case 2:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    case 3:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    case 4:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    case 5:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    case 6:
 	      funcptr_led_change=&voice_select_led_state;
-	      button_to_coordinate(monome, c, 0, 0, funcptr_led_change);
+	      button_to_coordinate(c, 0, 0, funcptr_led_change);
 	      break;
 	    }
 	  /*              */
@@ -1570,27 +1582,27 @@ state_manager(monome_t *monome)
 	    {
 	    case 1:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    case 2:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    case 3:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    case 4:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    case 5:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    case 6:
 	      funcptr_led_change=&voice_assignment_led_state;
-	      button_to_coordinate(monome, c, 0, 8, funcptr_led_change);
+	      button_to_coordinate(c, 0, 8, funcptr_led_change);
 	      break;
 	    }
 
@@ -1598,107 +1610,107 @@ state_manager(monome_t *monome)
 	  /* SEQUENCER-SAMPLE-SELECT */
 	  /*      */
 	  funcptr_led_change=&selected_assignment_led_state;
-	  button_to_coordinate(monome, c, 8, 8, funcptr_led_change);
+	  button_to_coordinate(c, 8, 8, funcptr_led_change);
 	}
 
       /* check tap recorder status */
       funcptr_led_change=&tap_recorder_led_state;
-      button_to_coordinate(monome, 63, 0, 0, funcptr_led_change);
+      button_to_coordinate(63, 0, 0, funcptr_led_change);
 
       /* check main sequencer transport status */
       funcptr_led_change=&seq_transport_led_state;
-      button_to_coordinate(monome, 63, 0, 0, funcptr_led_change);
+      button_to_coordinate(63, 0, 0, funcptr_led_change);
 
       /* check sequencer voice-assignment control row LEDs */
       for( c = 1; c < 7; c++)
 	{
 	  if( sequencer_bank_pos[c] == 1)
-	    candor_led_on(monome, c, 15);
+	    candor_led_on( c, 15);
 	  else
-	    candor_led_off(monome, c, 15);
+	    candor_led_off( c, 15);
 	}
 
       /* check sequencer control row LEDs */
       for( c = 0; c < 7; c++)
 	{
 	  if( sequencer_page_pos[c] == 1)
-	    candor_led_on(monome, c, 7);
+	    candor_led_on( c, 7);
 	  else
-	    candor_led_off(monome, c, 7);
+	    candor_led_off( c, 7);
 	}
 
       /* handle blink for external osc clock */
       if (external_clock_enable == 1)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  candor_led_set(monome, 7, 6, blink_state);
+	  candor_led_set( 7, 6, blink_state);
 	  if( sequencer_page_pos[0]==1 )
 	    {
 	      funcptr_led_change=&playhead_led_refresh;
-	      button_to_coordinate(monome, seq_playhead, 0, 0, funcptr_led_change);
+	      button_to_coordinate(seq_playhead, 0, 0, funcptr_led_change);
 	    }
 	}
       else
 	/* fill sequencer tempo row LEDs */      
 	for( c=0; c<8; c++)
 	  if(seq_bpm_led==0)
-	    candor_led_on(monome,0,6);
+	    candor_led_on(0,6);
 	  else
 	    if(c<seq_bpm_led)
-	      candor_led_on(monome,c,6);
+	      candor_led_on(c,6);
 	    else
-	      candor_led_off(monome,c,6);
+	      candor_led_off(c,6);
 
       /* check sampler control row LEDs */
       for( c = 0; c < 8; c++)
 	{
 	  if( sampler_page_pos[c] == 1)
-	    candor_led_on(monome, c+8, 7);
+	    candor_led_on( c+8, 7);
 	  else
-	    candor_led_off(monome, c+8, 7);
+	    candor_led_off( c+8, 7);
 	}
 
       /* fill playback-speed control row LEDs */
       for( c=0; c<8; c++)
 	if( (c<=playback_speed_led-1) && (c>=3) )
-	  candor_led_on(monome,c,14);
+	  candor_led_on(c,14);
 	else
 	  if( (c>=playback_speed_led-1) && (c<=3) )
-	    candor_led_on(monome,c,14);
+	    candor_led_on(c,14);
 	  else
 	    if(c==playback_speed_led-1)
-	      candor_led_on(monome,c,14);
+	      candor_led_on(c,14);
 	    else
-	      candor_led_off(monome,c,14);
+	      candor_led_off(c,14);
 
       /* fill sampler attack ramp LEDs */      
       for( c=0; c<8; c++)
 	if(playback_rampup_led==0)
-	  candor_led_on(monome,8,14);
+	  candor_led_on(8,14);
 	else
 	  if(c<playback_rampup_led)
-	    candor_led_on(monome,c+8,14);
+	    candor_led_on(c+8,14);
 	  else
-	    candor_led_off(monome,c+8,14);
+	    candor_led_off(c+8,14);
 
       /* fill sampler decay ramp LEDs */
       for( c=0; c<8; c++)
 	if(playback_rampdown_led==0)
-	  candor_led_on(monome,8,15);
+	  candor_led_on(8,15);
 	else
 	  if( c<playback_rampdown_led )
-	    candor_led_on(monome,c+8,15);
+	    candor_led_on(c+8,15);
 	  else
-	    candor_led_off(monome,c+8,15);
+	    candor_led_off(c+8,15);
 
       /* handle blink for tap tempo decrease */
       if(seq_bpm_dec_led)
 	{
 	  state_tempo_dec++;
-	  candor_led_on(monome,0,15);
+	  candor_led_on(0,15);
 	  if(state_tempo_dec==2)
 	    {
-	      candor_led_off(monome,0,15);
+	      candor_led_off(0,15);
 	      state_tempo_dec=0;
 	      seq_bpm_dec_led=0;
 	    }
@@ -1708,10 +1720,10 @@ state_manager(monome_t *monome)
       if(seq_bpm_inc_led)
 	{
 	  state_tempo_inc++;
-	  candor_led_on(monome,7,15);
+	  candor_led_on(7,15);
 	  if(state_tempo_inc==2)
 	    {
-	      candor_led_off(monome,7,15);
+	      candor_led_off(7,15);
 	      state_tempo_inc=0;
 	      seq_bpm_inc_led=0;
 	    }
@@ -1721,26 +1733,26 @@ state_manager(monome_t *monome)
       if(playback_upnoclip)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  candor_led_set(monome, 8, 14, blink_state);
+	  candor_led_set( 8, 14, blink_state);
 	}
       else
-	candor_led_on(monome,8,14);
+	candor_led_on(8,14);
 
       /* handle blink for decay ramp's no-clip function */
       if(playback_downnoclip)
 	{
 	  blink_state = (int)rand()/(int)(5) % 2;
-	  candor_led_set(monome, 8, 15, blink_state);
+	  candor_led_set( 8, 15, blink_state);
 	}
       else
-	candor_led_on(monome,8,15);
+	candor_led_on(8,15);
       
       /* handle blink for reverse playback speed function */
       for(c=1;c<=8;c++)
 	if(playback_reverse&&(c==playback_speed_led))
 	  {
 	    blink_state = (int)rand()/(int)(5) % 2;
-	    candor_led_set(monome, c-1, 14, blink_state);
+	    candor_led_set( c-1, 14, blink_state);
 	  }
 
       /* handle blink for reverse playback speed function */
@@ -1748,7 +1760,7 @@ state_manager(monome_t *monome)
 	if(playback_reverse&&(c==playback_speed_led))
 	  {
 	    blink_state = (int)rand()/(int)(5) % 2;
-	    candor_led_set(monome, c-1, 14, blink_state);
+	    candor_led_set( c-1, 14, blink_state);
 	  }
 
       /* sending too many messages to serialoscd
@@ -1936,16 +1948,16 @@ process_alsa_rawmidi(char *portname)
 } /* process_alsa_rawmidi */
 
 void
-setup_candor(monome_t *monome, char *name, char *path, char *prefix,
+setup_candor( char *name, char *path, char *prefix,
 	     int bitdepth, char *rawmidi_device)
 {
   /* begin 'state manager' thread */
   pthread_t state_thread_id;
-  pthread_create(&state_thread_id, NULL, state_manager, monome);
+  pthread_create(&state_thread_id, NULL, state_manager, NULL);
   pthread_detach(&state_thread_id);
 
   /* sets default state of candor */
-  init_default_state(monome);
+  init_default_state();
 
   /* libficus setup */
   if (ficus_setup(name, path, prefix, bitdepth) == 1)
@@ -1956,7 +1968,7 @@ setup_candor(monome_t *monome, char *name, char *path, char *prefix,
 
   /* begin sequencer metronome thread */
   pthread_t transport_thread_id;
-  pthread_create(&transport_thread_id, NULL, seq_transport_thread, monome);
+  pthread_create(&transport_thread_id, NULL, seq_transport_thread, NULL);
   pthread_detach(&transport_thread_id);
   /* if we have a specified device to use with alsa raw midi, hook it up */
   if( rawmidi_device != NULL )
@@ -2037,7 +2049,15 @@ int osc_external_clock_handler(const char *path, const char *types, lo_arg ** ar
   return 0;
 } /* osc_external_clock_handler */
 
-
+int osc_serialosc_port_handler(const char *path, const char *types, lo_arg ** argv,
+				 int argc, void *data, void *user_data)
+{
+  printf("received focus notification\n");
+  if(argc >= 1)
+    {
+      candor_has_monome_focus = argv[0]->i == 6001;
+    }
+}
 int osc_serialosc_device_handler(const char *path, const char *types, lo_arg ** argv,
 				 int argc, void *data, void *user_data)
 { 
@@ -2256,7 +2276,7 @@ int osc_islooping_handler(const char *path, const char *types, lo_arg ** argv,
   return 0;
 } /* osc_islooping_handler */
 
-int quit_candor(monome_t *monome) {
+int quit_candor() {
   /* clean-up */
   fprintf(stdout, "Closing monome...\n");
   monome_close(monome);
@@ -2313,12 +2333,6 @@ print_header(void) {
   printf("\n");
 
 } /* print_header */
-
-void
-monome_thread(monome_t *monome)
-{
-    monome_event_loop(monome);
-} /* monome_thread */
 
 int 
 main(int argc, char *argv[]) 
@@ -2442,11 +2456,13 @@ main(int argc, char *argv[])
   if( non_serialosc_port == "init" ) {
     /* begin an osc server on port 94606 for serialosc setup */
     lo_server_thread st = lo_server_thread_new( osc_port, error);
+    sscanf(osc_port, "%d", &candor_osc_port);
 
     /* add method that will match any path and args */
     /* lo_server_thread_add_method(st, NULL, NULL, generic_handler, NULL); */
     /* add method that will match the path /quit with no args */
     lo_server_thread_add_method(st, "/serialosc/device", "ssi", osc_serialosc_device_handler, NULL);
+
     lo_server_thread_start(st);
 
     /* set outgoing address of osc messages */
@@ -2490,7 +2506,6 @@ main(int argc, char *argv[])
   }
 
   /* need to declare this here in case we initialize the osc interface's osc_quit_handler */
-  monome_t *monome=NULL; 
 
   /* start a new long-living osc server on port 94606 */
   lo_server_thread st = lo_server_thread_new(osc_port, error);
@@ -2517,6 +2532,10 @@ main(int argc, char *argv[])
   lo_server_thread_add_method(st, "/candor/islooping", "i", osc_islooping_handler, NULL);
   lo_server_thread_add_method(st, "/candor/quit", NULL, osc_quit_handler, NULL);
   lo_server_thread_add_method(st, "/candor/clock", NULL, osc_external_clock_handler, NULL);
+
+  lo_server_thread_add_method(st, "/monome/grid/key", "iii", monome_key_handler, NULL);
+  lo_server_thread_add_method(st, "/sys/port", "i", osc_serialosc_port_handler, NULL);
+
   lo_server_thread_start(st);
   printf("\nosc receive port: %s\n", osc_port);
   printf("osc send port: %s\n", osc_port_out);
@@ -2533,23 +2552,14 @@ main(int argc, char *argv[])
     return -1;
   }
   /* clear monome LEDs */
-  candor_led_all(monome, 0);
-
-  /* register our button presses callback for triggering events
-   and maintaining state */
-  monome_register_handler(monome, MONOME_BUTTON_DOWN, handle_press, NULL);
-  monome_register_handler(monome, MONOME_BUTTON_UP, handle_lift, NULL);
+  candor_led_all( 0);
 
   /* candor general setup */
-  setup_candor(monome, "candor", sampler_path, sampler_prefix, 24, rawmidi_device);
+  setup_candor("candor", sampler_path, sampler_prefix, 24, rawmidi_device);
 
   if( connchan )
     ficus_connect_channels(8,8);
 
-  pthread_t monome_thread_id;
-  pthread_create(&monome_thread_id, NULL, monome_thread, monome);
-  pthread_detach(&monome_thread_id);
-  
   printf("press <ENTER> to quit\n\n");
 
   sleep(1);

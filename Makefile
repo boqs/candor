@@ -1,5 +1,5 @@
 all:
-	gcc -o candor main.c monome_cache.c ficus/libficus.c ficus/rtqueue.c -llo -lsndfile -lasound -ljack -lpthread -lmonome -Ificus
+	gcc -o candor main.c monome_cache.c ficus/libficus.c ficus/rtqueue.c -llo -lsndfile -lasound -ljack -lpthread -Ificus -g
 install:
 	cp candor /opt/bin/candor
 uninstall:
