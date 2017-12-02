@@ -3,6 +3,8 @@
 extern int candor_has_monome_focus;
 extern int monome_serialosc_port;
 extern int candor_osc_port;
+extern int grid_128_y_offset;
+void candor_toggle_128(void);
 int candor_led_on(int x, int y);
   
 int candor_led_off(int x, int y);

@@ -988,13 +988,14 @@ int monome_key_handler(const char *path, const char *types, lo_arg ** argv,
   printf("entered monome_key_handler\n");
   if(argc >= 3) {
     if(argv[2]->i) {
-      handle_press(argv[0]->i, argv[1]->i);
+      handle_press(argv[0]->i, argv[1]->i+grid_128_y_offset);
     }
     else {
-      handle_lift(argv[0]->i, argv[1]->i);
+      handle_lift(argv[0]->i, argv[1]->i+grid_128_y_offset);
     }
   }
 }
+
 void
 playback_led_state( int x, int y)
 {
@@ -2575,7 +2576,8 @@ main(int argc, char *argv[])
     usleep(10000);
     if(key) {
       candor_grab_focus();
-      printf("bffff...\n");
+      candor_toggle_128();
+      printf("y offset = %d...\n", grid_128_y_offset);
     }
   }
 
